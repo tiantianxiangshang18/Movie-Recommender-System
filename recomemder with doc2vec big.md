@@ -1582,6 +1582,3 @@ hybrid(50, 'The Godfather')
 </table>
 </div>
 
-
-
-Thank Rounak Banik @ Kaggle (https://www.kaggle.com/rounakbanik/movie-recommender-systems) for the code except the Doc2Vec part.
