@@ -1,1584 +1,1769 @@
-
-Movie Recommender System to Give Personalized Recommendations
-
-Built a hybrid movie recommender system using the metadata for 45,000 movies and ratings from 270,000 users.
-
-Built a content-based recommender based on plot descriptions. Doc2Vec based on paragraph vector was applied to find movies with similar plot descriptions.
-
-Combined content-based with collaborative filter-based engines to establish a hybrid movie recommender system to give personalized recommendations for different users.
-
-This example shows the hybrid movie recommender system gives different recommendations to different users according to their previous rating for other movies.
-
-
-```python
-hybrid(1, 'The Shawshank Redemption')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Movie Recommender System to Give Personalized Recommendations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Built a hybrid movie recommender system using the metadata for 45,000 movies and ratings from 270,000 users."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Built a content-based recommender based on plot descriptions. Doc2Vec based on paragraph vector was applied to find movies with similar plot descriptions."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Combined content-based with collaborative filter-based engines to establish a hybrid movie recommender system to give personalized recommendations for different users."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This example shows the hybrid movie recommender system gives different recommendations to different users according to their previous rating for other movies."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 101,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>title</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>year</th>\n",
+       "      <th>id</th>\n",
+       "      <th>est</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>700</th>\n",
+       "      <td>Dead Man</td>\n",
+       "      <td>397.0</td>\n",
+       "      <td>7.2</td>\n",
+       "      <td>1995</td>\n",
+       "      <td>922</td>\n",
+       "      <td>2.820908</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>29532</th>\n",
+       "      <td>Mother's Day</td>\n",
+       "      <td>126.0</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>101669</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>24296</th>\n",
+       "      <td>Charlie Chan at the Opera</td>\n",
+       "      <td>14.0</td>\n",
+       "      <td>6.6</td>\n",
+       "      <td>1936</td>\n",
+       "      <td>28044</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39342</th>\n",
+       "      <td>Les Tuche 2: Le rêve américain</td>\n",
+       "      <td>239.0</td>\n",
+       "      <td>5.7</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>369776</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39623</th>\n",
+       "      <td>Batman: The Killing Joke</td>\n",
+       "      <td>485.0</td>\n",
+       "      <td>6.2</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>382322</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30725</th>\n",
+       "      <td>Hallettsville</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2009</td>\n",
+       "      <td>9935</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>38167</th>\n",
+       "      <td>Moonshine County Express</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1977</td>\n",
+       "      <td>99846</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10352</th>\n",
+       "      <td>Bookies</td>\n",
+       "      <td>19.0</td>\n",
+       "      <td>6.8</td>\n",
+       "      <td>2003</td>\n",
+       "      <td>14759</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>37019</th>\n",
+       "      <td>Eve's Christmas</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>4.5</td>\n",
+       "      <td>2004</td>\n",
+       "      <td>69016</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                title  vote_count  vote_average  year      id  \\\n",
+       "700                          Dead Man       397.0           7.2  1995     922   \n",
+       "29532                    Mother's Day       126.0           6.3  2010  101669   \n",
+       "24296       Charlie Chan at the Opera        14.0           6.6  1936   28044   \n",
+       "39342  Les Tuche 2: Le rêve américain       239.0           5.7  2016  369776   \n",
+       "39623        Batman: The Killing Joke       485.0           6.2  2016  382322   \n",
+       "30725                   Hallettsville         3.0           5.0  2009    9935   \n",
+       "38167        Moonshine County Express         0.0           0.0  1977   99846   \n",
+       "10352                         Bookies        19.0           6.8  2003   14759   \n",
+       "37019                 Eve's Christmas         3.0           4.5  2004   69016   \n",
+       "\n",
+       "            est  \n",
+       "700    2.820908  \n",
+       "29532  2.703810  \n",
+       "24296  2.703810  \n",
+       "39342  2.703810  \n",
+       "39623  2.703810  \n",
+       "30725  2.703810  \n",
+       "38167  2.703810  \n",
+       "10352  2.703810  \n",
+       "37019  2.703810  "
+      ]
+     },
+     "execution_count": 101,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
+   ],
+   "source": [
+    "hybrid(1, 'The Godfather')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 102,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>title</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>year</th>\n",
+       "      <th>id</th>\n",
+       "      <th>est</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>29532</th>\n",
+       "      <td>Mother's Day</td>\n",
+       "      <td>126.0</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>101669</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39342</th>\n",
+       "      <td>Les Tuche 2: Le rêve américain</td>\n",
+       "      <td>239.0</td>\n",
+       "      <td>5.7</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>369776</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>24296</th>\n",
+       "      <td>Charlie Chan at the Opera</td>\n",
+       "      <td>14.0</td>\n",
+       "      <td>6.6</td>\n",
+       "      <td>1936</td>\n",
+       "      <td>28044</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39623</th>\n",
+       "      <td>Batman: The Killing Joke</td>\n",
+       "      <td>485.0</td>\n",
+       "      <td>6.2</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>382322</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30725</th>\n",
+       "      <td>Hallettsville</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2009</td>\n",
+       "      <td>9935</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>38167</th>\n",
+       "      <td>Moonshine County Express</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1977</td>\n",
+       "      <td>99846</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10352</th>\n",
+       "      <td>Bookies</td>\n",
+       "      <td>19.0</td>\n",
+       "      <td>6.8</td>\n",
+       "      <td>2003</td>\n",
+       "      <td>14759</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>44685</th>\n",
+       "      <td>Hurdy-Gurdy Hare</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>6.5</td>\n",
+       "      <td>1950</td>\n",
+       "      <td>236112</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>700</th>\n",
+       "      <td>Dead Man</td>\n",
+       "      <td>397.0</td>\n",
+       "      <td>7.2</td>\n",
+       "      <td>1995</td>\n",
+       "      <td>922</td>\n",
+       "      <td>3.204096</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                title  vote_count  vote_average  year      id  \\\n",
+       "29532                    Mother's Day       126.0           6.3  2010  101669   \n",
+       "39342  Les Tuche 2: Le rêve américain       239.0           5.7  2016  369776   \n",
+       "24296       Charlie Chan at the Opera        14.0           6.6  1936   28044   \n",
+       "39623        Batman: The Killing Joke       485.0           6.2  2016  382322   \n",
+       "30725                   Hallettsville         3.0           5.0  2009    9935   \n",
+       "38167        Moonshine County Express         0.0           0.0  1977   99846   \n",
+       "10352                         Bookies        19.0           6.8  2003   14759   \n",
+       "44685                Hurdy-Gurdy Hare         2.0           6.5  1950  236112   \n",
+       "700                          Dead Man       397.0           7.2  1995     922   \n",
+       "\n",
+       "            est  \n",
+       "29532  3.310722  \n",
+       "39342  3.310722  \n",
+       "24296  3.310722  \n",
+       "39623  3.310722  \n",
+       "30725  3.310722  \n",
+       "38167  3.310722  \n",
+       "10352  3.310722  \n",
+       "44685  3.310722  \n",
+       "700    3.204096  "
+      ]
+     },
+     "execution_count": 102,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe thead th {
-        text-align: right;
+   ],
+   "source": [
+    "hybrid(50, 'The Godfather')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 103,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%matplotlib inline\n",
+    "import os\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "from scipy import stats\n",
+    "from ast import literal_eval\n",
+    "from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer\n",
+    "from sklearn.metrics.pairwise import linear_kernel, cosine_similarity\n",
+    "from nltk.stem.snowball import SnowballStemmer\n",
+    "from nltk.stem.wordnet import WordNetLemmatizer\n",
+    "from nltk.corpus import wordnet\n",
+    "from surprise import Reader, Dataset, SVD, evaluate\n",
+    "import gensim\n",
+    "from gensim.models.doc2vec import Doc2Vec\n",
+    "import warnings; warnings.simplefilter('ignore')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.chdir(r'C:/movie project')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Simple Recommender"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "md = pd. read_csv('movies_metadata.csv')\n",
+    "md['genres'] = md['genres'].fillna('[]').apply(literal_eval).apply(lambda x: [i['name'] for i in x] if isinstance(x, list) else [])\n",
+    "vote_counts = md[md['vote_count'].notnull()]['vote_count'].astype('int')\n",
+    "vote_averages = md[md['vote_average'].notnull()]['vote_average'].astype('int')\n",
+    "C = vote_averages.mean()\n",
+    "m = vote_counts.quantile(0.95)\n",
+    "md['year'] = pd.to_datetime(md['release_date'], errors='coerce').apply(lambda x: str(x).split('-')[0] if x != np.nan else np.nan)\n",
+    "qualified = md[(md['vote_count'] >= m) & (md['vote_count'].notnull()) & (md['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity', 'genres']]\n",
+    "qualified['vote_count'] = qualified['vote_count'].astype('int')\n",
+    "qualified['vote_average'] = qualified['vote_average'].astype('int')\n",
+    "\n",
+    "def weighted_rating(x):\n",
+    "    v = x['vote_count']\n",
+    "    R = x['vote_average']\n",
+    "    return (v/(v+m) * R) + (m/(m+v) * C)\n",
+    "qualified['wr'] = qualified.apply(weighted_rating, axis=1)\n",
+    "qualified = qualified.sort_values('wr', ascending=False).head(250)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "s = md.apply(lambda x: pd.Series(x['genres']),axis=1).stack().reset_index(level=1, drop=True)\n",
+    "s.name = 'genre'\n",
+    "gen_md = md.drop('genres', axis=1).join(s)\n",
+    "\n",
+    "def build_chart(genre, percentile=0.85):\n",
+    "    df = gen_md[gen_md['genre'] == genre]\n",
+    "    vote_counts = df[df['vote_count'].notnull()]['vote_count'].astype('int')\n",
+    "    vote_averages = df[df['vote_average'].notnull()]['vote_average'].astype('int')\n",
+    "    C = vote_averages.mean()\n",
+    "    m = vote_counts.quantile(percentile)\n",
+    "    \n",
+    "    qualified = df[(df['vote_count'] >= m) & (df['vote_count'].notnull()) & (df['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity']]\n",
+    "    qualified['vote_count'] = qualified['vote_count'].astype('int')\n",
+    "    qualified['vote_average'] = qualified['vote_average'].astype('int')\n",
+    "    \n",
+    "    qualified['wr'] = qualified.apply(lambda x: (x['vote_count']/(x['vote_count']+m) * x['vote_average']) + (m/(m+x['vote_count']) * C), axis=1)\n",
+    "    qualified = qualified.sort_values('wr', ascending=False).head(250)\n",
+    "    \n",
+    "    return qualified"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>title</th>\n",
+       "      <th>year</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>popularity</th>\n",
+       "      <th>genres</th>\n",
+       "      <th>wr</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>15480</th>\n",
+       "      <td>Inception</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>14075</td>\n",
+       "      <td>8</td>\n",
+       "      <td>29.1081</td>\n",
+       "      <td>[Action, Thriller, Science Fiction, Mystery, A...</td>\n",
+       "      <td>7.917588</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>12481</th>\n",
+       "      <td>The Dark Knight</td>\n",
+       "      <td>2008</td>\n",
+       "      <td>12269</td>\n",
+       "      <td>8</td>\n",
+       "      <td>123.167</td>\n",
+       "      <td>[Drama, Action, Crime, Thriller]</td>\n",
+       "      <td>7.905871</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>22879</th>\n",
+       "      <td>Interstellar</td>\n",
+       "      <td>2014</td>\n",
+       "      <td>11187</td>\n",
+       "      <td>8</td>\n",
+       "      <td>32.2135</td>\n",
+       "      <td>[Adventure, Drama, Science Fiction]</td>\n",
+       "      <td>7.897107</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2843</th>\n",
+       "      <td>Fight Club</td>\n",
+       "      <td>1999</td>\n",
+       "      <td>9678</td>\n",
+       "      <td>8</td>\n",
+       "      <td>63.8696</td>\n",
+       "      <td>[Drama]</td>\n",
+       "      <td>7.881753</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4863</th>\n",
+       "      <td>The Lord of the Rings: The Fellowship of the Ring</td>\n",
+       "      <td>2001</td>\n",
+       "      <td>8892</td>\n",
+       "      <td>8</td>\n",
+       "      <td>32.0707</td>\n",
+       "      <td>[Adventure, Fantasy, Action]</td>\n",
+       "      <td>7.871787</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>292</th>\n",
+       "      <td>Pulp Fiction</td>\n",
+       "      <td>1994</td>\n",
+       "      <td>8670</td>\n",
+       "      <td>8</td>\n",
+       "      <td>140.95</td>\n",
+       "      <td>[Thriller, Crime]</td>\n",
+       "      <td>7.868660</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>314</th>\n",
+       "      <td>The Shawshank Redemption</td>\n",
+       "      <td>1994</td>\n",
+       "      <td>8358</td>\n",
+       "      <td>8</td>\n",
+       "      <td>51.6454</td>\n",
+       "      <td>[Drama, Crime]</td>\n",
+       "      <td>7.864000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7000</th>\n",
+       "      <td>The Lord of the Rings: The Return of the King</td>\n",
+       "      <td>2003</td>\n",
+       "      <td>8226</td>\n",
+       "      <td>8</td>\n",
+       "      <td>29.3244</td>\n",
+       "      <td>[Adventure, Fantasy, Action]</td>\n",
+       "      <td>7.861927</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>351</th>\n",
+       "      <td>Forrest Gump</td>\n",
+       "      <td>1994</td>\n",
+       "      <td>8147</td>\n",
+       "      <td>8</td>\n",
+       "      <td>48.3072</td>\n",
+       "      <td>[Comedy, Drama, Romance]</td>\n",
+       "      <td>7.860656</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5814</th>\n",
+       "      <td>The Lord of the Rings: The Two Towers</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>7641</td>\n",
+       "      <td>8</td>\n",
+       "      <td>29.4235</td>\n",
+       "      <td>[Adventure, Fantasy, Action]</td>\n",
+       "      <td>7.851924</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                                   title  year  vote_count  \\\n",
+       "15480                                          Inception  2010       14075   \n",
+       "12481                                    The Dark Knight  2008       12269   \n",
+       "22879                                       Interstellar  2014       11187   \n",
+       "2843                                          Fight Club  1999        9678   \n",
+       "4863   The Lord of the Rings: The Fellowship of the Ring  2001        8892   \n",
+       "292                                         Pulp Fiction  1994        8670   \n",
+       "314                             The Shawshank Redemption  1994        8358   \n",
+       "7000       The Lord of the Rings: The Return of the King  2003        8226   \n",
+       "351                                         Forrest Gump  1994        8147   \n",
+       "5814               The Lord of the Rings: The Two Towers  2002        7641   \n",
+       "\n",
+       "       vote_average popularity  \\\n",
+       "15480             8    29.1081   \n",
+       "12481             8    123.167   \n",
+       "22879             8    32.2135   \n",
+       "2843              8    63.8696   \n",
+       "4863              8    32.0707   \n",
+       "292               8     140.95   \n",
+       "314               8    51.6454   \n",
+       "7000              8    29.3244   \n",
+       "351               8    48.3072   \n",
+       "5814              8    29.4235   \n",
+       "\n",
+       "                                                  genres        wr  \n",
+       "15480  [Action, Thriller, Science Fiction, Mystery, A...  7.917588  \n",
+       "12481                   [Drama, Action, Crime, Thriller]  7.905871  \n",
+       "22879                [Adventure, Drama, Science Fiction]  7.897107  \n",
+       "2843                                             [Drama]  7.881753  \n",
+       "4863                        [Adventure, Fantasy, Action]  7.871787  \n",
+       "292                                    [Thriller, Crime]  7.868660  \n",
+       "314                                       [Drama, Crime]  7.864000  \n",
+       "7000                        [Adventure, Fantasy, Action]  7.861927  \n",
+       "351                             [Comedy, Drama, Romance]  7.860656  \n",
+       "5814                        [Adventure, Fantasy, Action]  7.851924  "
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>id</th>
-      <th>est</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>26728</th>
-      <td>The Last Gangster</td>
-      <td>4.0</td>
-      <td>5.3</td>
-      <td>1937</td>
-      <td>28712</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>6395</th>
-      <td>The Housekeeper</td>
-      <td>8.0</td>
-      <td>6.1</td>
-      <td>2002</td>
-      <td>34840</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>39876</th>
-      <td>3 Geezers!</td>
-      <td>11.0</td>
-      <td>5.0</td>
-      <td>2013</td>
-      <td>190967</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>27044</th>
-      <td>Lifeguard</td>
-      <td>5.0</td>
-      <td>6.7</td>
-      <td>1976</td>
-      <td>5002</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>16051</th>
-      <td>Undisputed III : Redemption</td>
-      <td>182.0</td>
-      <td>7.3</td>
-      <td>2010</td>
-      <td>38234</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>15847</th>
-      <td>The Oscar</td>
-      <td>3.0</td>
-      <td>6.3</td>
-      <td>1966</td>
-      <td>56168</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>30409</th>
-      <td>Curfew</td>
-      <td>33.0</td>
-      <td>7.5</td>
-      <td>2012</td>
-      <td>157289</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>16717</th>
-      <td>Three Crowns of the Sailor</td>
-      <td>7.0</td>
-      <td>8.3</td>
-      <td>1983</td>
-      <td>64441</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>25336</th>
-      <td>H6: Diary of a Serial Killer</td>
-      <td>4.0</td>
-      <td>5.0</td>
-      <td>2005</td>
-      <td>39928</td>
-      <td>2.70381</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-hybrid(50, 'The Shawshank Redemption')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
+   ],
+   "source": [
+    "qualified.head(10)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Content Based Recommender"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Read csv file and delete 19730, 29503, 35587"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "md = md.drop([19730, 29503, 35587])\n",
+    "md['id'] = md['id'].astype('int')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "smd = md\n",
+    "smd['description'] = smd['overview'].fillna('')\n",
+    "smd['description'] = smd['description'].astype('str').apply(lambda x: str.lower(x.replace(\",\", \"\")))\n",
+    "smd['description'] = smd['description'].astype('str').apply(lambda x: str.lower(x.replace(\".\", \"\")))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def getText():\n",
+    "    discuss_train=list(smd['description'])\n",
+    "    return discuss_train\n",
+    " \n",
+    "text=getText()\n",
+    "\n",
+    "TaggededDocument=gensim.models.doc2vec.TaggedDocument\n",
+    "\n",
+    "def X_train(cut_sentence):\n",
+    "    x_train=[]\n",
+    "    for i, text in enumerate(cut_sentence):\n",
+    "        word_list=text.split(' ')\n",
+    "        l=len(word_list)\n",
+    "        word_list[l-1] = word_list[l-1].strip()\n",
+    "        document=TaggededDocument(word_list,tags=[i])\n",
+    "        x_train.append(document)\n",
+    "    return x_train\n",
+    "\n",
+    "c=X_train(text)\n",
+    "\n",
+    "def train(x_train):\n",
+    "    model=Doc2Vec(x_train, min_count=1, size=200)\n",
+    "    return model\n",
+    "\n",
+    "model_dm=train(c)\n",
+    "\n",
+    "md = md.reset_index()\n",
+    "titles = md['title']\n",
+    "indices = pd.Series(md.index, index=md['title'])\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def get_recommendations(title):\n",
+    "    idx = indices[title]\n",
+    "    strl= md['overview'].iloc[idx]\n",
+    "    test_text=strl.split(' ')\n",
+    "    inferred_vector=model_dm.infer_vector(doc_words=test_text,alpha=0.025, min_alpha = 0.001, steps=10000)\n",
+    "    sims = model_dm.docvecs.most_similar([inferred_vector],topn=11)\n",
+    "    movie_indices = [i[0] for i in sims[1:10]]\n",
+    "    return titles.iloc[movie_indices]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Check the recommendations for The Shawshank Redemption"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 57,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "24186                           The Uncertainty Principle\n",
+       "5443                                             Quitting\n",
+       "20581                                    The Great Gatsby\n",
+       "42936                                  Unexpected Journey\n",
+       "32789                                           12 Chairs\n",
+       "25888    Johan Falk: GSI - Gruppen för särskilda insatser\n",
+       "1216                                         Evil Dead II\n",
+       "22654                     Better Living Through Chemistry\n",
+       "11773                                  The Devil Commands\n",
+       "Name: title, dtype: object"
+      ]
+     },
+     "execution_count": 57,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
+   ],
+   "source": [
+    "get_recommendations('The Shawshank Redemption')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Popularity and Ratings"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 71,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "smd = md\n",
+    "smd['description'] = smd['overview'].fillna('')\n",
+    "def improved_recommendations(title):\n",
+    "    idx = indices[title]\n",
+    "    strl= smd['description'].iloc[idx]\n",
+    "    test_text=strl.split(' ')\n",
+    "    inferred_vector=model_dm.infer_vector(doc_words=test_text,alpha=0.025, min_alpha = 0.001, steps=10000)\n",
+    "    sims = model_dm.docvecs.most_similar([inferred_vector],topn=50)\n",
+    "    movie_indices = [i[0] for i in sims[1:50]]\n",
+    "    movies = smd.iloc[movie_indices][['title', 'vote_count', 'vote_average', 'year']]\n",
+    "    vote_counts = movies[movies['vote_count'].notnull()]['vote_count'].astype('int')\n",
+    "    vote_averages = movies[movies['vote_average'].notnull()]['vote_average'].astype('int')\n",
+    "    C = vote_averages.mean()\n",
+    "    m = vote_counts.quantile(0.60)\n",
+    "    qualified = movies[(movies['vote_count'] >= m) & (movies['vote_count'].notnull()) & (movies['vote_average'].notnull())]\n",
+    "    qualified['vote_count'] = qualified['vote_count'].astype('int')\n",
+    "    qualified['vote_average'] = qualified['vote_average'].astype('int')\n",
+    "    qualified['wr'] = qualified.apply(weighted_rating, axis=1)\n",
+    "    qualified = qualified.sort_values('wr', ascending=False).head(10)\n",
+    "    return qualified"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 73,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>title</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>year</th>\n",
+       "      <th>wr</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>43641</th>\n",
+       "      <td>Baby Driver</td>\n",
+       "      <td>2083</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2017</td>\n",
+       "      <td>6.697372</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>23169</th>\n",
+       "      <td>The Raid 2</td>\n",
+       "      <td>832</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2014</td>\n",
+       "      <td>6.398329</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10332</th>\n",
+       "      <td>Transporter 2</td>\n",
+       "      <td>1076</td>\n",
+       "      <td>6</td>\n",
+       "      <td>2005</td>\n",
+       "      <td>5.782970</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>16051</th>\n",
+       "      <td>Undisputed III : Redemption</td>\n",
+       "      <td>182</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>5.763450</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10369</th>\n",
+       "      <td>Domino</td>\n",
+       "      <td>450</td>\n",
+       "      <td>6</td>\n",
+       "      <td>2005</td>\n",
+       "      <td>5.629282</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10919</th>\n",
+       "      <td>Magic</td>\n",
+       "      <td>59</td>\n",
+       "      <td>7</td>\n",
+       "      <td>1978</td>\n",
+       "      <td>5.454939</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9086</th>\n",
+       "      <td>Pusher</td>\n",
+       "      <td>162</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1996</td>\n",
+       "      <td>5.450143</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30409</th>\n",
+       "      <td>Curfew</td>\n",
+       "      <td>33</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2012</td>\n",
+       "      <td>5.368919</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6424</th>\n",
+       "      <td>Avanti!</td>\n",
+       "      <td>49</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1972</td>\n",
+       "      <td>5.321501</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>18839</th>\n",
+       "      <td>Madhouse</td>\n",
+       "      <td>21</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1974</td>\n",
+       "      <td>5.279748</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                             title  vote_count  vote_average  year        wr\n",
+       "43641                  Baby Driver        2083             7  2017  6.697372\n",
+       "23169                   The Raid 2         832             7  2014  6.398329\n",
+       "10332                Transporter 2        1076             6  2005  5.782970\n",
+       "16051  Undisputed III : Redemption         182             7  2010  5.763450\n",
+       "10369                       Domino         450             6  2005  5.629282\n",
+       "10919                        Magic          59             7  1978  5.454939\n",
+       "9086                        Pusher         162             6  1996  5.450143\n",
+       "30409                       Curfew          33             7  2012  5.368919\n",
+       "6424                       Avanti!          49             6  1972  5.321501\n",
+       "18839                     Madhouse          21             6  1974  5.279748"
+      ]
+     },
+     "execution_count": 73,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe thead th {
-        text-align: right;
+   ],
+   "source": [
+    "improved_recommendations('The Shawshank Redemption')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Collaborative Filtering"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 74,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "reader = Reader()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 75,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>userId</th>\n",
+       "      <th>movieId</th>\n",
+       "      <th>rating</th>\n",
+       "      <th>timestamp</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>31</td>\n",
+       "      <td>2.5</td>\n",
+       "      <td>1260759144</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1029</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1260759179</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1061</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1260759182</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1129</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759185</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1172</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>1260759205</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   userId  movieId  rating   timestamp\n",
+       "0       1       31     2.5  1260759144\n",
+       "1       1     1029     3.0  1260759179\n",
+       "2       1     1061     3.0  1260759182\n",
+       "3       1     1129     2.0  1260759185\n",
+       "4       1     1172     4.0  1260759205"
+      ]
+     },
+     "execution_count": 75,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>id</th>
-      <th>est</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>26728</th>
-      <td>The Last Gangster</td>
-      <td>4.0</td>
-      <td>5.3</td>
-      <td>1937</td>
-      <td>28712</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>6395</th>
-      <td>The Housekeeper</td>
-      <td>8.0</td>
-      <td>6.1</td>
-      <td>2002</td>
-      <td>34840</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>39876</th>
-      <td>3 Geezers!</td>
-      <td>11.0</td>
-      <td>5.0</td>
-      <td>2013</td>
-      <td>190967</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>27044</th>
-      <td>Lifeguard</td>
-      <td>5.0</td>
-      <td>6.7</td>
-      <td>1976</td>
-      <td>5002</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>16051</th>
-      <td>Undisputed III : Redemption</td>
-      <td>182.0</td>
-      <td>7.3</td>
-      <td>2010</td>
-      <td>38234</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>15847</th>
-      <td>The Oscar</td>
-      <td>3.0</td>
-      <td>6.3</td>
-      <td>1966</td>
-      <td>56168</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>30409</th>
-      <td>Curfew</td>
-      <td>33.0</td>
-      <td>7.5</td>
-      <td>2012</td>
-      <td>157289</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>16717</th>
-      <td>Three Crowns of the Sailor</td>
-      <td>7.0</td>
-      <td>8.3</td>
-      <td>1983</td>
-      <td>64441</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>25336</th>
-      <td>H6: Diary of a Serial Killer</td>
-      <td>4.0</td>
-      <td>5.0</td>
-      <td>2005</td>
-      <td>39928</td>
-      <td>3.310722</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-%matplotlib inline
-import os
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
-from ast import literal_eval
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics.pairwise import linear_kernel, cosine_similarity
-from nltk.stem.snowball import SnowballStemmer
-from nltk.stem.wordnet import WordNetLemmatizer
-from nltk.corpus import wordnet
-from surprise import Reader, Dataset, SVD, evaluate
-import gensim
-from gensim.models.doc2vec import Doc2Vec
-import warnings; warnings.simplefilter('ignore')
-```
-
-
-```python
-os.chdir(r'C:/movie project')
-```
-
-Simple Recommender
-
-
-```python
-md = pd. read_csv('movies_metadata.csv')
-md['genres'] = md['genres'].fillna('[]').apply(literal_eval).apply(lambda x: [i['name'] for i in x] if isinstance(x, list) else [])
-vote_counts = md[md['vote_count'].notnull()]['vote_count'].astype('int')
-vote_averages = md[md['vote_average'].notnull()]['vote_average'].astype('int')
-C = vote_averages.mean()
-m = vote_counts.quantile(0.95)
-md['year'] = pd.to_datetime(md['release_date'], errors='coerce').apply(lambda x: str(x).split('-')[0] if x != np.nan else np.nan)
-qualified = md[(md['vote_count'] >= m) & (md['vote_count'].notnull()) & (md['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity', 'genres']]
-qualified['vote_count'] = qualified['vote_count'].astype('int')
-qualified['vote_average'] = qualified['vote_average'].astype('int')
-
-def weighted_rating(x):
-    v = x['vote_count']
-    R = x['vote_average']
-    return (v/(v+m) * R) + (m/(m+v) * C)
-qualified['wr'] = qualified.apply(weighted_rating, axis=1)
-qualified = qualified.sort_values('wr', ascending=False).head(250)
-```
-
-
-```python
-s = md.apply(lambda x: pd.Series(x['genres']),axis=1).stack().reset_index(level=1, drop=True)
-s.name = 'genre'
-gen_md = md.drop('genres', axis=1).join(s)
-
-def build_chart(genre, percentile=0.85):
-    df = gen_md[gen_md['genre'] == genre]
-    vote_counts = df[df['vote_count'].notnull()]['vote_count'].astype('int')
-    vote_averages = df[df['vote_average'].notnull()]['vote_average'].astype('int')
-    C = vote_averages.mean()
-    m = vote_counts.quantile(percentile)
-    
-    qualified = df[(df['vote_count'] >= m) & (df['vote_count'].notnull()) & (df['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity']]
-    qualified['vote_count'] = qualified['vote_count'].astype('int')
-    qualified['vote_average'] = qualified['vote_average'].astype('int')
-    
-    qualified['wr'] = qualified.apply(lambda x: (x['vote_count']/(x['vote_count']+m) * x['vote_average']) + (m/(m+x['vote_count']) * C), axis=1)
-    qualified = qualified.sort_values('wr', ascending=False).head(250)
-    
-    return qualified
-```
-
-
-```python
-qualified.head(10)
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
+   ],
+   "source": [
+    "ratings = pd.read_csv('ratings_small.csv')\n",
+    "ratings.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 76,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "data = Dataset.load_from_df(ratings[['userId', 'movieId', 'rating']], reader)\n",
+    "data.split(n_folds=5)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 77,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Evaluating RMSE, MAE of algorithm SVD.\n",
+      "\n",
+      "------------\n",
+      "Fold 1\n",
+      "RMSE: 0.8907\n",
+      "MAE:  0.6876\n",
+      "------------\n",
+      "Fold 2\n",
+      "RMSE: 0.8920\n",
+      "MAE:  0.6853\n",
+      "------------\n",
+      "Fold 3\n",
+      "RMSE: 0.9027\n",
+      "MAE:  0.6968\n",
+      "------------\n",
+      "Fold 4\n",
+      "RMSE: 0.9049\n",
+      "MAE:  0.6984\n",
+      "------------\n",
+      "Fold 5\n",
+      "RMSE: 0.8990\n",
+      "MAE:  0.6905\n",
+      "------------\n",
+      "------------\n",
+      "Mean RMSE: 0.8979\n",
+      "Mean MAE : 0.6917\n",
+      "------------\n",
+      "------------\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "CaseInsensitiveDefaultDict(list,\n",
+       "                           {'mae': [0.6876289845916422,\n",
+       "                             0.6853187852842678,\n",
+       "                             0.6968463315260166,\n",
+       "                             0.6983666668898275,\n",
+       "                             0.6905333288418136],\n",
+       "                            'rmse': [0.8907329120066598,\n",
+       "                             0.8919991071163405,\n",
+       "                             0.9027361586391015,\n",
+       "                             0.9048594539655962,\n",
+       "                             0.8990288481051337]})"
+      ]
+     },
+     "execution_count": 77,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
+   ],
+   "source": [
+    "svd = SVD()\n",
+    "evaluate(svd, data, measures=['RMSE', 'MAE'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 78,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<surprise.prediction_algorithms.matrix_factorization.SVD at 0x1a286175a58>"
+      ]
+     },
+     "execution_count": 78,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe thead th {
-        text-align: right;
+   ],
+   "source": [
+    "trainset = data.build_full_trainset()\n",
+    "svd.train(trainset)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 79,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>userId</th>\n",
+       "      <th>movieId</th>\n",
+       "      <th>rating</th>\n",
+       "      <th>timestamp</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>31</td>\n",
+       "      <td>2.5</td>\n",
+       "      <td>1260759144</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1029</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1260759179</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1061</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1260759182</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1129</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759185</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1172</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>1260759205</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1263</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759151</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1287</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759187</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1293</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759148</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1339</td>\n",
+       "      <td>3.5</td>\n",
+       "      <td>1260759125</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1343</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759131</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1371</td>\n",
+       "      <td>2.5</td>\n",
+       "      <td>1260759135</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>11</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1405</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>1260759203</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>12</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1953</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>1260759191</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>13</th>\n",
+       "      <td>1</td>\n",
+       "      <td>2105</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>1260759139</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>14</th>\n",
+       "      <td>1</td>\n",
+       "      <td>2150</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1260759194</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>15</th>\n",
+       "      <td>1</td>\n",
+       "      <td>2193</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759198</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>16</th>\n",
+       "      <td>1</td>\n",
+       "      <td>2294</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1260759108</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>17</th>\n",
+       "      <td>1</td>\n",
+       "      <td>2455</td>\n",
+       "      <td>2.5</td>\n",
+       "      <td>1260759113</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>18</th>\n",
+       "      <td>1</td>\n",
+       "      <td>2968</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>1260759200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>19</th>\n",
+       "      <td>1</td>\n",
+       "      <td>3671</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1260759117</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    userId  movieId  rating   timestamp\n",
+       "0        1       31     2.5  1260759144\n",
+       "1        1     1029     3.0  1260759179\n",
+       "2        1     1061     3.0  1260759182\n",
+       "3        1     1129     2.0  1260759185\n",
+       "4        1     1172     4.0  1260759205\n",
+       "5        1     1263     2.0  1260759151\n",
+       "6        1     1287     2.0  1260759187\n",
+       "7        1     1293     2.0  1260759148\n",
+       "8        1     1339     3.5  1260759125\n",
+       "9        1     1343     2.0  1260759131\n",
+       "10       1     1371     2.5  1260759135\n",
+       "11       1     1405     1.0  1260759203\n",
+       "12       1     1953     4.0  1260759191\n",
+       "13       1     2105     4.0  1260759139\n",
+       "14       1     2150     3.0  1260759194\n",
+       "15       1     2193     2.0  1260759198\n",
+       "16       1     2294     2.0  1260759108\n",
+       "17       1     2455     2.5  1260759113\n",
+       "18       1     2968     1.0  1260759200\n",
+       "19       1     3671     3.0  1260759117"
+      ]
+     },
+     "execution_count": 79,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>year</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>popularity</th>
-      <th>genres</th>
-      <th>wr</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>15480</th>
-      <td>Inception</td>
-      <td>2010</td>
-      <td>14075</td>
-      <td>8</td>
-      <td>29.1081</td>
-      <td>[Action, Thriller, Science Fiction, Mystery, A...</td>
-      <td>7.917588</td>
-    </tr>
-    <tr>
-      <th>12481</th>
-      <td>The Dark Knight</td>
-      <td>2008</td>
-      <td>12269</td>
-      <td>8</td>
-      <td>123.167</td>
-      <td>[Drama, Action, Crime, Thriller]</td>
-      <td>7.905871</td>
-    </tr>
-    <tr>
-      <th>22879</th>
-      <td>Interstellar</td>
-      <td>2014</td>
-      <td>11187</td>
-      <td>8</td>
-      <td>32.2135</td>
-      <td>[Adventure, Drama, Science Fiction]</td>
-      <td>7.897107</td>
-    </tr>
-    <tr>
-      <th>2843</th>
-      <td>Fight Club</td>
-      <td>1999</td>
-      <td>9678</td>
-      <td>8</td>
-      <td>63.8696</td>
-      <td>[Drama]</td>
-      <td>7.881753</td>
-    </tr>
-    <tr>
-      <th>4863</th>
-      <td>The Lord of the Rings: The Fellowship of the Ring</td>
-      <td>2001</td>
-      <td>8892</td>
-      <td>8</td>
-      <td>32.0707</td>
-      <td>[Adventure, Fantasy, Action]</td>
-      <td>7.871787</td>
-    </tr>
-    <tr>
-      <th>292</th>
-      <td>Pulp Fiction</td>
-      <td>1994</td>
-      <td>8670</td>
-      <td>8</td>
-      <td>140.95</td>
-      <td>[Thriller, Crime]</td>
-      <td>7.868660</td>
-    </tr>
-    <tr>
-      <th>314</th>
-      <td>The Shawshank Redemption</td>
-      <td>1994</td>
-      <td>8358</td>
-      <td>8</td>
-      <td>51.6454</td>
-      <td>[Drama, Crime]</td>
-      <td>7.864000</td>
-    </tr>
-    <tr>
-      <th>7000</th>
-      <td>The Lord of the Rings: The Return of the King</td>
-      <td>2003</td>
-      <td>8226</td>
-      <td>8</td>
-      <td>29.3244</td>
-      <td>[Adventure, Fantasy, Action]</td>
-      <td>7.861927</td>
-    </tr>
-    <tr>
-      <th>351</th>
-      <td>Forrest Gump</td>
-      <td>1994</td>
-      <td>8147</td>
-      <td>8</td>
-      <td>48.3072</td>
-      <td>[Comedy, Drama, Romance]</td>
-      <td>7.860656</td>
-    </tr>
-    <tr>
-      <th>5814</th>
-      <td>The Lord of the Rings: The Two Towers</td>
-      <td>2002</td>
-      <td>7641</td>
-      <td>8</td>
-      <td>29.4235</td>
-      <td>[Adventure, Fantasy, Action]</td>
-      <td>7.851924</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-Content Based Recommender
-
-Read csv file and delete 19730, 29503, 35587
-
-
-```python
-md = md.drop([19730, 29503, 35587])
-md['id'] = md['id'].astype('int')
-```
-
-
-```python
-smd = md
-smd['description'] = smd['overview'].fillna('')
-smd['description'] = smd['description'].astype('str').apply(lambda x: str.lower(x.replace(",", "")))
-smd['description'] = smd['description'].astype('str').apply(lambda x: str.lower(x.replace(".", "")))
-```
-
-
-```python
-def getText():
-    discuss_train=list(smd['description'])
-    return discuss_train
- 
-text=getText()
-
-TaggededDocument=gensim.models.doc2vec.TaggedDocument
-
-def X_train(cut_sentence):
-    x_train=[]
-    for i, text in enumerate(cut_sentence):
-        word_list=text.split(' ')
-        l=len(word_list)
-        word_list[l-1] = word_list[l-1].strip()
-        document=TaggededDocument(word_list,tags=[i])
-        x_train.append(document)
-    return x_train
-
-c=X_train(text)
-
-def train(x_train):
-    model=Doc2Vec(x_train, min_count=1, size=200)
-    return model
-
-model_dm=train(c)
-
-md = md.reset_index()
-titles = md['title']
-indices = pd.Series(md.index, index=md['title'])
-
-```
-
-
-```python
-def get_recommendations(title):
-    idx = indices[title]
-    strl= md['overview'].iloc[idx]
-    test_text=strl.split(' ')
-    inferred_vector=model_dm.infer_vector(doc_words=test_text,alpha=0.025, min_alpha = 0.001, steps=10000)
-    sims = model_dm.docvecs.most_similar([inferred_vector],topn=11)
-    movie_indices = [i[0] for i in sims[1:10]]
-    return titles.iloc[movie_indices]
-```
-
-Check the recommendations for The Shawshank Redemption
-
-
-```python
-get_recommendations('The Shawshank Redemption')
-```
-
-
-
-
-    24186                           The Uncertainty Principle
-    5443                                             Quitting
-    20581                                    The Great Gatsby
-    42936                                  Unexpected Journey
-    32789                                           12 Chairs
-    25888    Johan Falk: GSI - Gruppen för särskilda insatser
-    1216                                         Evil Dead II
-    22654                     Better Living Through Chemistry
-    11773                                  The Devil Commands
-    Name: title, dtype: object
-
-
-
-Popularity and Ratings
-
-
-```python
-smd = md
-smd['description'] = smd['overview'].fillna('')
-def improved_recommendations(title):
-    idx = indices[title]
-    strl= smd['description'].iloc[idx]
-    test_text=strl.split(' ')
-    inferred_vector=model_dm.infer_vector(doc_words=test_text,alpha=0.025, min_alpha = 0.001, steps=10000)
-    sims = model_dm.docvecs.most_similar([inferred_vector],topn=50)
-    movie_indices = [i[0] for i in sims[1:50]]
-    movies = smd.iloc[movie_indices][['title', 'vote_count', 'vote_average', 'year']]
-    vote_counts = movies[movies['vote_count'].notnull()]['vote_count'].astype('int')
-    vote_averages = movies[movies['vote_average'].notnull()]['vote_average'].astype('int')
-    C = vote_averages.mean()
-    m = vote_counts.quantile(0.60)
-    qualified = movies[(movies['vote_count'] >= m) & (movies['vote_count'].notnull()) & (movies['vote_average'].notnull())]
-    qualified['vote_count'] = qualified['vote_count'].astype('int')
-    qualified['vote_average'] = qualified['vote_average'].astype('int')
-    qualified['wr'] = qualified.apply(weighted_rating, axis=1)
-    qualified = qualified.sort_values('wr', ascending=False).head(10)
-    return qualified
-```
-
-
-```python
-improved_recommendations('The Shawshank Redemption')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
+   ],
+   "source": [
+    "ratings[ratings['userId'] == 1]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 80,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Prediction(uid=1, iid=302, r_ui=3, est=2.7111648412283342, details={'was_impossible': False})"
+      ]
+     },
+     "execution_count": 80,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
+   ],
+   "source": [
+    "svd.predict(1, 302, 3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Hybrid Recommender"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 82,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def convert_int(x):\n",
+    "    try:\n",
+    "        return int(x)\n",
+    "    except:\n",
+    "        return np.nan"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 83,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#new link\n",
+    "id_map = pd.read_csv('links.csv')[['movieId', 'tmdbId']]\n",
+    "id_map['tmdbId'] = id_map['tmdbId'].apply(convert_int)\n",
+    "id_map.columns = ['movieId', 'id']\n",
+    "id_map = id_map.merge(smd[['title', 'id']], on='id').set_index('title')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 90,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "id_map = pd.read_csv('links.csv')[['movieId', 'tmdbId']]\n",
+    "id_map['tmdbId'] = id_map['tmdbId'].apply(convert_int)\n",
+    "id_map.columns = ['movieId', 'id']\n",
+    "id_map = id_map.merge(smd[['title', 'id']], on='id').set_index('title')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 84,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "indices_map = id_map.set_index('id')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 96,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def hybrid(userId, title):\n",
+    "    idx = indices[title]\n",
+    "    tmdbId = id_map.loc[title]['id']\n",
+    "    movie_id = id_map.loc[title]['movieId']\n",
+    "    strl= smd['description'].iloc[idx]\n",
+    "    test_text=strl.split(' ')\n",
+    "    inferred_vector=model_dm.infer_vector(doc_words=test_text,alpha=0.025, min_alpha = 0.001, steps=10000)\n",
+    "    sims = model_dm.docvecs.most_similar([inferred_vector])\n",
+    "    movie_indices = [i[0] for i in sims[1:50]]\n",
+    "\n",
+    "    movies = smd.iloc[movie_indices][['title', 'vote_count', 'vote_average', 'year', 'id']]\n",
+    "    movies['est'] = movies['id'].apply(lambda x: svd.predict(userId, indices_map.loc[x]['movieId']).est)\n",
+    "    movies = movies.sort_values('est', ascending=False)\n",
+    "    return movies.head(10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 101,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>title</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>year</th>\n",
+       "      <th>id</th>\n",
+       "      <th>est</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>700</th>\n",
+       "      <td>Dead Man</td>\n",
+       "      <td>397.0</td>\n",
+       "      <td>7.2</td>\n",
+       "      <td>1995</td>\n",
+       "      <td>922</td>\n",
+       "      <td>2.820908</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>29532</th>\n",
+       "      <td>Mother's Day</td>\n",
+       "      <td>126.0</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>101669</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>24296</th>\n",
+       "      <td>Charlie Chan at the Opera</td>\n",
+       "      <td>14.0</td>\n",
+       "      <td>6.6</td>\n",
+       "      <td>1936</td>\n",
+       "      <td>28044</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39342</th>\n",
+       "      <td>Les Tuche 2: Le rêve américain</td>\n",
+       "      <td>239.0</td>\n",
+       "      <td>5.7</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>369776</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39623</th>\n",
+       "      <td>Batman: The Killing Joke</td>\n",
+       "      <td>485.0</td>\n",
+       "      <td>6.2</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>382322</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30725</th>\n",
+       "      <td>Hallettsville</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2009</td>\n",
+       "      <td>9935</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>38167</th>\n",
+       "      <td>Moonshine County Express</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1977</td>\n",
+       "      <td>99846</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10352</th>\n",
+       "      <td>Bookies</td>\n",
+       "      <td>19.0</td>\n",
+       "      <td>6.8</td>\n",
+       "      <td>2003</td>\n",
+       "      <td>14759</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>37019</th>\n",
+       "      <td>Eve's Christmas</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>4.5</td>\n",
+       "      <td>2004</td>\n",
+       "      <td>69016</td>\n",
+       "      <td>2.703810</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                title  vote_count  vote_average  year      id  \\\n",
+       "700                          Dead Man       397.0           7.2  1995     922   \n",
+       "29532                    Mother's Day       126.0           6.3  2010  101669   \n",
+       "24296       Charlie Chan at the Opera        14.0           6.6  1936   28044   \n",
+       "39342  Les Tuche 2: Le rêve américain       239.0           5.7  2016  369776   \n",
+       "39623        Batman: The Killing Joke       485.0           6.2  2016  382322   \n",
+       "30725                   Hallettsville         3.0           5.0  2009    9935   \n",
+       "38167        Moonshine County Express         0.0           0.0  1977   99846   \n",
+       "10352                         Bookies        19.0           6.8  2003   14759   \n",
+       "37019                 Eve's Christmas         3.0           4.5  2004   69016   \n",
+       "\n",
+       "            est  \n",
+       "700    2.820908  \n",
+       "29532  2.703810  \n",
+       "24296  2.703810  \n",
+       "39342  2.703810  \n",
+       "39623  2.703810  \n",
+       "30725  2.703810  \n",
+       "38167  2.703810  \n",
+       "10352  2.703810  \n",
+       "37019  2.703810  "
+      ]
+     },
+     "execution_count": 101,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-
-    .dataframe thead th {
-        text-align: right;
+   ],
+   "source": [
+    "hybrid(1, 'The Godfather')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 102,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>title</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>year</th>\n",
+       "      <th>id</th>\n",
+       "      <th>est</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>29532</th>\n",
+       "      <td>Mother's Day</td>\n",
+       "      <td>126.0</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>101669</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39342</th>\n",
+       "      <td>Les Tuche 2: Le rêve américain</td>\n",
+       "      <td>239.0</td>\n",
+       "      <td>5.7</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>369776</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>24296</th>\n",
+       "      <td>Charlie Chan at the Opera</td>\n",
+       "      <td>14.0</td>\n",
+       "      <td>6.6</td>\n",
+       "      <td>1936</td>\n",
+       "      <td>28044</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39623</th>\n",
+       "      <td>Batman: The Killing Joke</td>\n",
+       "      <td>485.0</td>\n",
+       "      <td>6.2</td>\n",
+       "      <td>2016</td>\n",
+       "      <td>382322</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30725</th>\n",
+       "      <td>Hallettsville</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2009</td>\n",
+       "      <td>9935</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>38167</th>\n",
+       "      <td>Moonshine County Express</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1977</td>\n",
+       "      <td>99846</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10352</th>\n",
+       "      <td>Bookies</td>\n",
+       "      <td>19.0</td>\n",
+       "      <td>6.8</td>\n",
+       "      <td>2003</td>\n",
+       "      <td>14759</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>44685</th>\n",
+       "      <td>Hurdy-Gurdy Hare</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>6.5</td>\n",
+       "      <td>1950</td>\n",
+       "      <td>236112</td>\n",
+       "      <td>3.310722</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>700</th>\n",
+       "      <td>Dead Man</td>\n",
+       "      <td>397.0</td>\n",
+       "      <td>7.2</td>\n",
+       "      <td>1995</td>\n",
+       "      <td>922</td>\n",
+       "      <td>3.204096</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                title  vote_count  vote_average  year      id  \\\n",
+       "29532                    Mother's Day       126.0           6.3  2010  101669   \n",
+       "39342  Les Tuche 2: Le rêve américain       239.0           5.7  2016  369776   \n",
+       "24296       Charlie Chan at the Opera        14.0           6.6  1936   28044   \n",
+       "39623        Batman: The Killing Joke       485.0           6.2  2016  382322   \n",
+       "30725                   Hallettsville         3.0           5.0  2009    9935   \n",
+       "38167        Moonshine County Express         0.0           0.0  1977   99846   \n",
+       "10352                         Bookies        19.0           6.8  2003   14759   \n",
+       "44685                Hurdy-Gurdy Hare         2.0           6.5  1950  236112   \n",
+       "700                          Dead Man       397.0           7.2  1995     922   \n",
+       "\n",
+       "            est  \n",
+       "29532  3.310722  \n",
+       "39342  3.310722  \n",
+       "24296  3.310722  \n",
+       "39623  3.310722  \n",
+       "30725  3.310722  \n",
+       "38167  3.310722  \n",
+       "10352  3.310722  \n",
+       "44685  3.310722  \n",
+       "700    3.204096  "
+      ]
+     },
+     "execution_count": 102,
+     "metadata": {},
+     "output_type": "execute_result"
     }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>wr</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>43641</th>
-      <td>Baby Driver</td>
-      <td>2083</td>
-      <td>7</td>
-      <td>2017</td>
-      <td>6.697372</td>
-    </tr>
-    <tr>
-      <th>23169</th>
-      <td>The Raid 2</td>
-      <td>832</td>
-      <td>7</td>
-      <td>2014</td>
-      <td>6.398329</td>
-    </tr>
-    <tr>
-      <th>10332</th>
-      <td>Transporter 2</td>
-      <td>1076</td>
-      <td>6</td>
-      <td>2005</td>
-      <td>5.782970</td>
-    </tr>
-    <tr>
-      <th>16051</th>
-      <td>Undisputed III : Redemption</td>
-      <td>182</td>
-      <td>7</td>
-      <td>2010</td>
-      <td>5.763450</td>
-    </tr>
-    <tr>
-      <th>10369</th>
-      <td>Domino</td>
-      <td>450</td>
-      <td>6</td>
-      <td>2005</td>
-      <td>5.629282</td>
-    </tr>
-    <tr>
-      <th>10919</th>
-      <td>Magic</td>
-      <td>59</td>
-      <td>7</td>
-      <td>1978</td>
-      <td>5.454939</td>
-    </tr>
-    <tr>
-      <th>9086</th>
-      <td>Pusher</td>
-      <td>162</td>
-      <td>6</td>
-      <td>1996</td>
-      <td>5.450143</td>
-    </tr>
-    <tr>
-      <th>30409</th>
-      <td>Curfew</td>
-      <td>33</td>
-      <td>7</td>
-      <td>2012</td>
-      <td>5.368919</td>
-    </tr>
-    <tr>
-      <th>6424</th>
-      <td>Avanti!</td>
-      <td>49</td>
-      <td>6</td>
-      <td>1972</td>
-      <td>5.321501</td>
-    </tr>
-    <tr>
-      <th>18839</th>
-      <td>Madhouse</td>
-      <td>21</td>
-      <td>6</td>
-      <td>1974</td>
-      <td>5.279748</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-Collaborative Filtering
-
-
-```python
-reader = Reader()
-```
-
-
-```python
-ratings = pd.read_csv('ratings_small.csv')
-ratings.head()
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>userId</th>
-      <th>movieId</th>
-      <th>rating</th>
-      <th>timestamp</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>31</td>
-      <td>2.5</td>
-      <td>1260759144</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1</td>
-      <td>1029</td>
-      <td>3.0</td>
-      <td>1260759179</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1</td>
-      <td>1061</td>
-      <td>3.0</td>
-      <td>1260759182</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1</td>
-      <td>1129</td>
-      <td>2.0</td>
-      <td>1260759185</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1</td>
-      <td>1172</td>
-      <td>4.0</td>
-      <td>1260759205</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-data = Dataset.load_from_df(ratings[['userId', 'movieId', 'rating']], reader)
-data.split(n_folds=5)
-```
-
-
-```python
-svd = SVD()
-evaluate(svd, data, measures=['RMSE', 'MAE'])
-```
-
-    Evaluating RMSE, MAE of algorithm SVD.
-    
-    ------------
-    Fold 1
-    RMSE: 0.8907
-    MAE:  0.6876
-    ------------
-    Fold 2
-    RMSE: 0.8920
-    MAE:  0.6853
-    ------------
-    Fold 3
-    RMSE: 0.9027
-    MAE:  0.6968
-    ------------
-    Fold 4
-    RMSE: 0.9049
-    MAE:  0.6984
-    ------------
-    Fold 5
-    RMSE: 0.8990
-    MAE:  0.6905
-    ------------
-    ------------
-    Mean RMSE: 0.8979
-    Mean MAE : 0.6917
-    ------------
-    ------------
-    
-
-
-
-
-    CaseInsensitiveDefaultDict(list,
-                               {'mae': [0.6876289845916422,
-                                 0.6853187852842678,
-                                 0.6968463315260166,
-                                 0.6983666668898275,
-                                 0.6905333288418136],
-                                'rmse': [0.8907329120066598,
-                                 0.8919991071163405,
-                                 0.9027361586391015,
-                                 0.9048594539655962,
-                                 0.8990288481051337]})
-
-
-
-
-```python
-trainset = data.build_full_trainset()
-svd.train(trainset)
-```
-
-
-
-
-    <surprise.prediction_algorithms.matrix_factorization.SVD at 0x1a286175a58>
-
-
-
-
-```python
-ratings[ratings['userId'] == 1]
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>userId</th>
-      <th>movieId</th>
-      <th>rating</th>
-      <th>timestamp</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>31</td>
-      <td>2.5</td>
-      <td>1260759144</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1</td>
-      <td>1029</td>
-      <td>3.0</td>
-      <td>1260759179</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1</td>
-      <td>1061</td>
-      <td>3.0</td>
-      <td>1260759182</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1</td>
-      <td>1129</td>
-      <td>2.0</td>
-      <td>1260759185</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1</td>
-      <td>1172</td>
-      <td>4.0</td>
-      <td>1260759205</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>1</td>
-      <td>1263</td>
-      <td>2.0</td>
-      <td>1260759151</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>1</td>
-      <td>1287</td>
-      <td>2.0</td>
-      <td>1260759187</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>1</td>
-      <td>1293</td>
-      <td>2.0</td>
-      <td>1260759148</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>1</td>
-      <td>1339</td>
-      <td>3.5</td>
-      <td>1260759125</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>1</td>
-      <td>1343</td>
-      <td>2.0</td>
-      <td>1260759131</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>1</td>
-      <td>1371</td>
-      <td>2.5</td>
-      <td>1260759135</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>1</td>
-      <td>1405</td>
-      <td>1.0</td>
-      <td>1260759203</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>1</td>
-      <td>1953</td>
-      <td>4.0</td>
-      <td>1260759191</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>1</td>
-      <td>2105</td>
-      <td>4.0</td>
-      <td>1260759139</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>1</td>
-      <td>2150</td>
-      <td>3.0</td>
-      <td>1260759194</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>1</td>
-      <td>2193</td>
-      <td>2.0</td>
-      <td>1260759198</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>1</td>
-      <td>2294</td>
-      <td>2.0</td>
-      <td>1260759108</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>1</td>
-      <td>2455</td>
-      <td>2.5</td>
-      <td>1260759113</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>1</td>
-      <td>2968</td>
-      <td>1.0</td>
-      <td>1260759200</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>1</td>
-      <td>3671</td>
-      <td>3.0</td>
-      <td>1260759117</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-svd.predict(1, 302, 3)
-```
-
-
-
-
-    Prediction(uid=1, iid=302, r_ui=3, est=2.7111648412283342, details={'was_impossible': False})
-
-
-
-Hybrid Recommender
-
-
-```python
-def convert_int(x):
-    try:
-        return int(x)
-    except:
-        return np.nan
-```
-
-
-```python
-#new link
-id_map = pd.read_csv('links.csv')[['movieId', 'tmdbId']]
-id_map['tmdbId'] = id_map['tmdbId'].apply(convert_int)
-id_map.columns = ['movieId', 'id']
-id_map = id_map.merge(smd[['title', 'id']], on='id').set_index('title')
-```
-
-
-```python
-id_map = pd.read_csv('links.csv')[['movieId', 'tmdbId']]
-id_map['tmdbId'] = id_map['tmdbId'].apply(convert_int)
-id_map.columns = ['movieId', 'id']
-id_map = id_map.merge(smd[['title', 'id']], on='id').set_index('title')
-```
-
-
-```python
-indices_map = id_map.set_index('id')
-```
-
-
-```python
-def hybrid(userId, title):
-    idx = indices[title]
-    tmdbId = id_map.loc[title]['id']
-    movie_id = id_map.loc[title]['movieId']
-    strl= smd['description'].iloc[idx]
-    test_text=strl.split(' ')
-    inferred_vector=model_dm.infer_vector(doc_words=test_text,alpha=0.025, min_alpha = 0.001, steps=10000)
-    sims = model_dm.docvecs.most_similar([inferred_vector])
-    movie_indices = [i[0] for i in sims[1:50]]
-
-    movies = smd.iloc[movie_indices][['title', 'vote_count', 'vote_average', 'year', 'id']]
-    movies['est'] = movies['id'].apply(lambda x: svd.predict(userId, indices_map.loc[x]['movieId']).est)
-    movies = movies.sort_values('est', ascending=False)
-    return movies.head(10)
-```
-
-
-```python
-hybrid(1, 'The Shawshank Redemption')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>id</th>
-      <th>est</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>26728</th>
-      <td>The Last Gangster</td>
-      <td>4.0</td>
-      <td>5.3</td>
-      <td>1937</td>
-      <td>28712</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>6395</th>
-      <td>The Housekeeper</td>
-      <td>8.0</td>
-      <td>6.1</td>
-      <td>2002</td>
-      <td>34840</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>39876</th>
-      <td>3 Geezers!</td>
-      <td>11.0</td>
-      <td>5.0</td>
-      <td>2013</td>
-      <td>190967</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>27044</th>
-      <td>Lifeguard</td>
-      <td>5.0</td>
-      <td>6.7</td>
-      <td>1976</td>
-      <td>5002</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>16051</th>
-      <td>Undisputed III : Redemption</td>
-      <td>182.0</td>
-      <td>7.3</td>
-      <td>2010</td>
-      <td>38234</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>15847</th>
-      <td>The Oscar</td>
-      <td>3.0</td>
-      <td>6.3</td>
-      <td>1966</td>
-      <td>56168</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>30409</th>
-      <td>Curfew</td>
-      <td>33.0</td>
-      <td>7.5</td>
-      <td>2012</td>
-      <td>157289</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>16717</th>
-      <td>Three Crowns of the Sailor</td>
-      <td>7.0</td>
-      <td>8.3</td>
-      <td>1983</td>
-      <td>64441</td>
-      <td>2.70381</td>
-    </tr>
-    <tr>
-      <th>25336</th>
-      <td>H6: Diary of a Serial Killer</td>
-      <td>4.0</td>
-      <td>5.0</td>
-      <td>2005</td>
-      <td>39928</td>
-      <td>2.70381</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-hybrid(50, 'The Shawshank Redemption')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>id</th>
-      <th>est</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>26728</th>
-      <td>The Last Gangster</td>
-      <td>4.0</td>
-      <td>5.3</td>
-      <td>1937</td>
-      <td>28712</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>6395</th>
-      <td>The Housekeeper</td>
-      <td>8.0</td>
-      <td>6.1</td>
-      <td>2002</td>
-      <td>34840</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>39876</th>
-      <td>3 Geezers!</td>
-      <td>11.0</td>
-      <td>5.0</td>
-      <td>2013</td>
-      <td>190967</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>16051</th>
-      <td>Undisputed III : Redemption</td>
-      <td>182.0</td>
-      <td>7.3</td>
-      <td>2010</td>
-      <td>38234</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>27044</th>
-      <td>Lifeguard</td>
-      <td>5.0</td>
-      <td>6.7</td>
-      <td>1976</td>
-      <td>5002</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>15847</th>
-      <td>The Oscar</td>
-      <td>3.0</td>
-      <td>6.3</td>
-      <td>1966</td>
-      <td>56168</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>30409</th>
-      <td>Curfew</td>
-      <td>33.0</td>
-      <td>7.5</td>
-      <td>2012</td>
-      <td>157289</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>18624</th>
-      <td>Miss Nobody</td>
-      <td>15.0</td>
-      <td>4.3</td>
-      <td>2010</td>
-      <td>51875</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>25336</th>
-      <td>H6: Diary of a Serial Killer</td>
-      <td>4.0</td>
-      <td>5.0</td>
-      <td>2005</td>
-      <td>39928</td>
-      <td>3.310722</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-hybrid(1, 'The Godfather')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>id</th>
-      <th>est</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>700</th>
-      <td>Dead Man</td>
-      <td>397.0</td>
-      <td>7.2</td>
-      <td>1995</td>
-      <td>922</td>
-      <td>2.820908</td>
-    </tr>
-    <tr>
-      <th>29532</th>
-      <td>Mother's Day</td>
-      <td>126.0</td>
-      <td>6.3</td>
-      <td>2010</td>
-      <td>101669</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>24296</th>
-      <td>Charlie Chan at the Opera</td>
-      <td>14.0</td>
-      <td>6.6</td>
-      <td>1936</td>
-      <td>28044</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>39342</th>
-      <td>Les Tuche 2: Le rêve américain</td>
-      <td>239.0</td>
-      <td>5.7</td>
-      <td>2016</td>
-      <td>369776</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>39623</th>
-      <td>Batman: The Killing Joke</td>
-      <td>485.0</td>
-      <td>6.2</td>
-      <td>2016</td>
-      <td>382322</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>30725</th>
-      <td>Hallettsville</td>
-      <td>3.0</td>
-      <td>5.0</td>
-      <td>2009</td>
-      <td>9935</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>38167</th>
-      <td>Moonshine County Express</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1977</td>
-      <td>99846</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>10352</th>
-      <td>Bookies</td>
-      <td>19.0</td>
-      <td>6.8</td>
-      <td>2003</td>
-      <td>14759</td>
-      <td>2.703810</td>
-    </tr>
-    <tr>
-      <th>37019</th>
-      <td>Eve's Christmas</td>
-      <td>3.0</td>
-      <td>4.5</td>
-      <td>2004</td>
-      <td>69016</td>
-      <td>2.703810</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-hybrid(50, 'The Godfather')
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>vote_count</th>
-      <th>vote_average</th>
-      <th>year</th>
-      <th>id</th>
-      <th>est</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>29532</th>
-      <td>Mother's Day</td>
-      <td>126.0</td>
-      <td>6.3</td>
-      <td>2010</td>
-      <td>101669</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>39342</th>
-      <td>Les Tuche 2: Le rêve américain</td>
-      <td>239.0</td>
-      <td>5.7</td>
-      <td>2016</td>
-      <td>369776</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>24296</th>
-      <td>Charlie Chan at the Opera</td>
-      <td>14.0</td>
-      <td>6.6</td>
-      <td>1936</td>
-      <td>28044</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>39623</th>
-      <td>Batman: The Killing Joke</td>
-      <td>485.0</td>
-      <td>6.2</td>
-      <td>2016</td>
-      <td>382322</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>30725</th>
-      <td>Hallettsville</td>
-      <td>3.0</td>
-      <td>5.0</td>
-      <td>2009</td>
-      <td>9935</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>38167</th>
-      <td>Moonshine County Express</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1977</td>
-      <td>99846</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>10352</th>
-      <td>Bookies</td>
-      <td>19.0</td>
-      <td>6.8</td>
-      <td>2003</td>
-      <td>14759</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>44685</th>
-      <td>Hurdy-Gurdy Hare</td>
-      <td>2.0</td>
-      <td>6.5</td>
-      <td>1950</td>
-      <td>236112</td>
-      <td>3.310722</td>
-    </tr>
-    <tr>
-      <th>700</th>
-      <td>Dead Man</td>
-      <td>397.0</td>
-      <td>7.2</td>
-      <td>1995</td>
-      <td>922</td>
-      <td>3.204096</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
+   ],
+   "source": [
+    "hybrid(50, 'The Godfather')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Thank Rounak Banik @ Kaggle (https://www.kaggle.com/rounakbanik/movie-recommender-systems) for the code except the Doc2Vec part."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
